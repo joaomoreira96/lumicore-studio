@@ -43,27 +43,17 @@ export interface AppUser {
 }
 
 export interface DailyStats {
-  id: string;
-  date: string;
-  visitors: number;
-  visits: number;
+  day: string;
+  total_visits: number;
   created_at: string;
   updated_at: string;
 }
 
 export interface DailyDeviceStats {
-  id: string;
-  date: string;
-  device_type: string;
-  visitors: number;
-}
-
-export interface DailyCityStats {
-  id: string;
-  date: string;
-  country: string | null;
-  city: string | null;
-  visitors: number;
+  day: string;
+  device: string;
+  visits: number;
+  created_at: string;
 }
 
 export interface ContactSubmission {

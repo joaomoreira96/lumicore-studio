@@ -1,27 +1,38 @@
 import { NextResponse } from "next/server";
 import { trackVisit } from "@/lib/analytics";
+import {
+  getLocalDayString,
+  isValidDayString,
+  readTrackedDayFromCookie,
+  VISIT_TRACKED_COOKIE,
+} from "@/lib/analytics/visit-day";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const visitorId = body.visitorId as string | undefined;
+    const day = (body.day as string | undefined) ?? getLocalDayString();
 
-    if (!visitorId) {
-      return NextResponse.json({ error: "Missing visitorId" }, { status: 400 });
+    if (!isValidDayString(day)) {
+      return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+    }
+
+    const cookieHeader = request.headers.get("cookie");
+    if (readTrackedDayFromCookie(cookieHeader) === day) {
+      return NextResponse.json({ ok: true, skipped: true });
     }
 
     const userAgent = request.headers.get("user-agent") ?? "";
-    const country = request.headers.get("x-vercel-ip-country");
-    const city = request.headers.get("x-vercel-ip-city");
+    await trackVisit({ day, userAgent });
 
-    await trackVisit({
-      visitorId,
-      userAgent,
-      country,
-      city: city ? decodeURIComponent(city) : null,
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(VISIT_TRACKED_COOKIE, day, {
+      path: "/",
+      maxAge: 60 * 60 * 24,
+      sameSite: "lax",
+      httpOnly: false,
     });
 
-    return NextResponse.json({ ok: true });
+    return response;
   } catch {
     return NextResponse.json({ error: "Tracking failed" }, { status: 500 });
   }

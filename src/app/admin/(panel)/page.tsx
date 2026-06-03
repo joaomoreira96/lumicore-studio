@@ -10,12 +10,11 @@ export default async function AdminDashboardPage() {
     getAdminFaqCount(),
     getUnansweredContactCount(),
     getAnalyticsSummary().catch(() => ({
-      todayVisitors: 0,
-      weekVisitors: 0,
-      totalVisitors: 0,
       todayVisits: 0,
+      weekVisits: 0,
+      totalVisits: 0,
       devices: [],
-      cities: [],
+      dailySeries: [],
     })),
   ]);
 
@@ -28,7 +27,7 @@ export default async function AdminDashboardPage() {
       highlight: unansweredContacts > 0,
     },
     { label: "FAQs", value: faqCount, href: "/admin/faqs" },
-    { label: "Today's visitors", value: analytics.todayVisitors, href: "/admin/analytics" },
+    { label: "Today's visits", value: analytics.todayVisits, href: "/admin/analytics" },
   ];
 
   return (

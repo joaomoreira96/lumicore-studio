@@ -1,5 +1,6 @@
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 import { verifyAdminSession } from "@/lib/auth/verify-admin";
 import { getServerLocale } from "@/lib/i18n/server";
 import { LanguageProvider } from "@/providers/language-provider";
@@ -16,6 +17,7 @@ export default async function PublicLayout({
 
   return (
     <LanguageProvider initialLocale={locale}>
+      <AnalyticsTracker />
       <Navbar isAdmin={adminSession.ok} />
       <main className="flex-1">{children}</main>
       <Footer />

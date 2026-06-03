@@ -1,177 +1,141 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getLocalDayString } from "@/lib/analytics/visit-day";
 
-function todayDateString() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function detectDeviceType(userAgent: string): string {
+function detectDevice(userAgent: string): string {
   const ua = userAgent.toLowerCase();
   if (/tablet|ipad/.test(ua)) return "tablet";
   if (/mobile|android|iphone/.test(ua)) return "mobile";
   return "desktop";
 }
 
-export async function trackVisit(params: {
-  visitorId: string;
-  userAgent: string;
-  country?: string | null;
-  city?: string | null;
-}) {
+export async function trackVisit(params: { day: string; userAgent: string }) {
   const supabase = createAdminClient();
-  const today = todayDateString();
-  const deviceType = detectDeviceType(params.userAgent);
+  const device = detectDevice(params.userAgent);
 
-  const { data: existingSession } = await supabase
-    .from("visitor_sessions")
-    .select("visitor_id")
-    .eq("visitor_id", params.visitorId)
-    .eq("date", today)
-    .maybeSingle();
-
-  const isNewVisitor = !existingSession;
-
-  if (isNewVisitor) {
-    await supabase.from("visitor_sessions").insert({
-      visitor_id: params.visitorId,
-      date: today,
-    });
-  }
-
-  const { data: existingStats } = await supabase
+  const { data: dailyRow } = await supabase
     .from("daily_stats")
-    .select("*")
-    .eq("date", today)
+    .select("total_visits")
+    .eq("day", params.day)
     .maybeSingle();
 
-  if (existingStats) {
-    await supabase
+  if (dailyRow) {
+    const { error } = await supabase
       .from("daily_stats")
-      .update({
-        visits: existingStats.visits + 1,
-        visitors: isNewVisitor
-          ? existingStats.visitors + 1
-          : existingStats.visitors,
-      })
-      .eq("id", existingStats.id);
+      .update({ total_visits: dailyRow.total_visits + 1 })
+      .eq("day", params.day);
+    if (error) throw error;
   } else {
-    await supabase.from("daily_stats").insert({
-      date: today,
-      visits: 1,
-      visitors: 1,
-    });
+    const { error } = await supabase
+      .from("daily_stats")
+      .insert({ day: params.day, total_visits: 1 });
+    if (error) throw error;
   }
 
-  if (!isNewVisitor) {
-    return;
-  }
-
-  const { data: deviceStats } = await supabase
+  const { data: deviceRow } = await supabase
     .from("daily_device_stats")
-    .select("*")
-    .eq("date", today)
-    .eq("device_type", deviceType)
+    .select("visits")
+    .eq("day", params.day)
+    .eq("device", device)
     .maybeSingle();
 
-  if (deviceStats) {
-    await supabase
+  if (deviceRow) {
+    const { error } = await supabase
       .from("daily_device_stats")
-      .update({ visitors: deviceStats.visitors + 1 })
-      .eq("id", deviceStats.id);
+      .update({ visits: deviceRow.visits + 1 })
+      .eq("day", params.day)
+      .eq("device", device);
+    if (error) throw error;
   } else {
-    await supabase.from("daily_device_stats").insert({
-      date: today,
-      device_type: deviceType,
-      visitors: 1,
+    const { error } = await supabase.from("daily_device_stats").insert({
+      day: params.day,
+      device,
+      visits: 1,
     });
-  }
-
-  const country = params.country ?? "Unknown";
-  const city = params.city ?? "Unknown";
-
-  const { data: cityStats } = await supabase
-    .from("daily_city_stats")
-    .select("*")
-    .eq("date", today)
-    .eq("country", country)
-    .eq("city", city)
-    .maybeSingle();
-
-  if (cityStats) {
-    await supabase
-      .from("daily_city_stats")
-      .update({ visitors: cityStats.visitors + 1 })
-      .eq("id", cityStats.id);
-  } else {
-    await supabase.from("daily_city_stats").insert({
-      date: today,
-      country,
-      city,
-      visitors: 1,
-    });
+    if (error) throw error;
   }
 }
 
-export async function getAnalyticsSummary() {
-  const supabase = createAdminClient();
-  const today = todayDateString();
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  const weekAgoStr = weekAgo.toISOString().slice(0, 10);
+export type DailyVisitPoint = {
+  day: string;
+  label: string;
+  visits: number;
+};
 
-  const [todayRes, weekRes, deviceRes, cityRes, totalRes] = await Promise.all([
-    supabase.from("daily_stats").select("*").eq("date", today).maybeSingle(),
+export type AnalyticsSummary = {
+  todayVisits: number;
+  weekVisits: number;
+  totalVisits: number;
+  devices: { device: string; visits: number }[];
+  dailySeries: DailyVisitPoint[];
+};
+
+function formatDayLabel(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function buildDailySeries(
+  rows: { day: string; total_visits: number }[],
+  days: number
+): DailyVisitPoint[] {
+  const map = new Map(rows.map((r) => [r.day, r.total_visits]));
+  const series: DailyVisitPoint[] = [];
+  const cursor = new Date();
+
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(cursor);
+    date.setDate(cursor.getDate() - i);
+    const day = getLocalDayString(date);
+    series.push({
+      day,
+      label: formatDayLabel(day),
+      visits: map.get(day) ?? 0,
+    });
+  }
+
+  return series;
+}
+
+export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const supabase = createAdminClient();
+  const today = getLocalDayString();
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  const weekStart = getLocalDayString(weekAgo);
+  const chartStart = new Date();
+  chartStart.setDate(chartStart.getDate() - 13);
+  const chartStartDay = getLocalDayString(chartStart);
+
+  const [todayRes, weekRes, allRes, deviceRes, seriesRes] = await Promise.all([
+    supabase.from("daily_stats").select("total_visits").eq("day", today).maybeSingle(),
+    supabase.from("daily_stats").select("total_visits").gte("day", weekStart),
+    supabase.from("daily_stats").select("total_visits"),
+    supabase.from("daily_device_stats").select("device, visits").gte("day", weekStart),
     supabase
       .from("daily_stats")
-      .select("visitors, visits")
-      .gte("date", weekAgoStr),
-    supabase
-      .from("daily_device_stats")
-      .select("device_type, visitors")
-      .gte("date", weekAgoStr),
-    supabase
-      .from("daily_city_stats")
-      .select("country, city, visitors")
-      .gte("date", weekAgoStr),
-    supabase.from("daily_stats").select("visitors, visits"),
+      .select("day, total_visits")
+      .gte("day", chartStartDay)
+      .order("day", { ascending: true }),
   ]);
 
-  const weekVisitors =
-    weekRes.data?.reduce((sum, row) => sum + row.visitors, 0) ?? 0;
-  const totalVisitors =
-    totalRes.data?.reduce((sum, row) => sum + row.visitors, 0) ?? 0;
+  const weekVisits = weekRes.data?.reduce((sum, row) => sum + row.total_visits, 0) ?? 0;
+  const totalVisits = allRes.data?.reduce((sum, row) => sum + row.total_visits, 0) ?? 0;
 
   const deviceMap = new Map<string, number>();
   deviceRes.data?.forEach((row) => {
-    deviceMap.set(
-      row.device_type,
-      (deviceMap.get(row.device_type) ?? 0) + row.visitors
-    );
-  });
-
-  const cityMap = new Map<string, { country: string; city: string; visitors: number }>();
-  cityRes.data?.forEach((row) => {
-    const key = `${row.country ?? "Unknown"}|${row.city ?? "Unknown"}`;
-    const existing = cityMap.get(key);
-    if (existing) {
-      existing.visitors += row.visitors;
-    } else {
-      cityMap.set(key, {
-        country: row.country ?? "Unknown",
-        city: row.city ?? "Unknown",
-        visitors: row.visitors,
-      });
-    }
+    deviceMap.set(row.device, (deviceMap.get(row.device) ?? 0) + row.visits);
   });
 
   return {
-    todayVisitors: todayRes.data?.visitors ?? 0,
-    todayVisits: todayRes.data?.visits ?? 0,
-    weekVisitors,
-    totalVisitors,
-    devices: Array.from(deviceMap.entries()).map(([device_type, visitors]) => ({
-      device_type,
-      visitors,
-    })),
-    cities: Array.from(cityMap.values()).sort((a, b) => b.visitors - a.visitors),
+    todayVisits: todayRes.data?.total_visits ?? 0,
+    weekVisits,
+    totalVisits,
+    devices: Array.from(deviceMap.entries())
+      .map(([device, visits]) => ({ device, visits }))
+      .sort((a, b) => b.visits - a.visits),
+    dailySeries: buildDailySeries(seriesRes.data ?? [], 14),
   };
 }

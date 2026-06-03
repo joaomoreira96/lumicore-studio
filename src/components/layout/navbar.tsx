@@ -32,13 +32,13 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-white/5 bg-lumi-bg/80 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-[6rem] max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:min-h-[5.4rem] md:py-3">
+        <div className="mx-auto flex min-h-[6rem] max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:min-h-[6.48rem] md:py-3">
           <Link href="/" className="flex shrink-0 items-center" onClick={() => setOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logoUrl(LOGO_FULL_SRC)}
               alt="Lumicore Studio"
-              className="hidden h-[4.95rem] w-auto md:block lg:h-[5.4rem]"
+              className="hidden h-[5.94rem] w-auto md:block lg:h-[6.48rem]"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
