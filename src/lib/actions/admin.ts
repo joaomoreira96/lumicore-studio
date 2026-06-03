@@ -16,6 +16,8 @@ export type FaqFormState = {
 
 export type ProjectFormState = FaqFormState;
 
+export type SiteSettingsFormState = FaqFormState;
+
 async function requireAdminSession() {
   const supabase = await createClient();
   const {
@@ -223,6 +225,42 @@ export async function markContactAnswered(id: string, isAnswered: boolean) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin");
   revalidatePath("/admin/contacts");
+}
+
+export async function saveSiteSettings(
+  _prevState: SiteSettingsFormState,
+  formData: FormData
+): Promise<SiteSettingsFormState> {
+  try {
+    const supabase = await requireAdminDb();
+
+    const payload = {
+      footer_text_pt: formData.get("footer_text_pt") as string,
+      footer_text_en: formData.get("footer_text_en") as string,
+      email: (formData.get("email") as string) || null,
+      github: (formData.get("github") as string) || null,
+      linkedin: (formData.get("linkedin") as string) || null,
+      facebook: (formData.get("facebook") as string) || null,
+      instagram: (formData.get("instagram") as string) || null,
+    };
+
+    const { error } = await supabase.from("site_settings").upsert({
+      id: 1,
+      ...payload,
+    });
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/", "layout");
+    revalidatePath("/contact");
+    revalidatePath("/admin/settings");
+
+    return { success: true, message: "Definições guardadas com sucesso." };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao guardar definições.",
+    };
+  }
 }
 
 export async function signOut() {

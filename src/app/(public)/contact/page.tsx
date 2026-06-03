@@ -1,12 +1,15 @@
-"use client";
-
 import { ContactForm } from "@/components/contact/contact-form";
 import { FadeIn } from "@/components/shared/fade-in";
 import { PageContainer, PageHeader, Section } from "@/components/shared/page-shell";
-import { useLanguage } from "@/providers/language-provider";
+import { getSiteSettings } from "@/lib/data/site-settings";
+import { getContactEmail } from "@/lib/site-settings";
+import { getServerDictionary } from "@/lib/i18n/server";
 
-export default function ContactPage() {
-  const { dict } = useLanguage();
+export default async function ContactPage() {
+  const [siteSettings, { dict }] = await Promise.all([
+    getSiteSettings(),
+    getServerDictionary(),
+  ]);
 
   return (
     <Section>
@@ -15,7 +18,7 @@ export default function ContactPage() {
           <PageHeader title={dict.contact.title} subtitle={dict.contact.subtitle} />
         </FadeIn>
         <div className="mt-12">
-          <ContactForm />
+          <ContactForm contactEmail={getContactEmail(siteSettings)} />
         </div>
       </PageContainer>
     </Section>

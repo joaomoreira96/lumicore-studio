@@ -62,3 +62,15 @@ export interface ContactSubmission {
   company?: string;
   message: string;
 }
+
+export interface SiteSettings {
+  id: number;
+  email: string | null;
+  linkedin: string | null;
+  github: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  footer_text_pt: string;
+  footer_text_en: string;
+  updated_at: string;
+}

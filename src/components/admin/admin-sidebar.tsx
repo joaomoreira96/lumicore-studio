@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  Settings,
 } from "lucide-react";
 import { signOut } from "@/lib/actions/admin";
 import { cn } from "@/lib/utils";
@@ -16,6 +17,7 @@ const navItems = [
   { href: "/admin/contacts", label: "Contacts", icon: Mail, badge: true },
   { href: "/admin/faqs", label: "FAQs", icon: HelpCircle },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminSidebar({

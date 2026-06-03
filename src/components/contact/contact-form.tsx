@@ -1,15 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FadeIn } from "@/components/shared/fade-in";
-import { SITE_EMAIL } from "@/lib/constants";
 import { useLanguage } from "@/providers/language-provider";
 
-export function ContactForm() {
+export function ContactForm({ contactEmail }: { contactEmail: string }) {
   const { dict } = useLanguage();
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
     "idle"
@@ -65,13 +63,7 @@ export function ContactForm() {
         <div>
           <p className="text-lg font-medium text-lumi-text">{dict.contact.cta}</p>
           <p className="mt-2 text-sm text-lumi-muted">{dict.contact.workflow}</p>
-          <a
-            href={`mailto:${SITE_EMAIL}`}
-            className="mt-8 inline-flex items-center gap-2 text-lumi-blue transition-colors hover:text-lumi-cyan"
-          >
-            <Mail className="size-4" />
-            {SITE_EMAIL}
-          </a>
+          <p className="mt-8 text-sm text-lumi-text">{contactEmail}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass-card space-y-4 p-6 sm:p-8">

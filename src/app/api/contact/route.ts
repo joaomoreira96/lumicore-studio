@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { SITE_EMAIL } from "@/lib/constants";
+import { getSiteSettings } from "@/lib/data/site-settings";
+import { getContactEmail } from "@/lib/site-settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const contactSchema = z.object({
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
 
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
+      const siteEmail = getContactEmail(await getSiteSettings());
       try {
         await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
           },
           body: JSON.stringify({
             from: "Lumicore Studio <onboarding@resend.dev>",
-            to: [SITE_EMAIL],
+            to: [siteEmail],
             reply_to: email,
             subject: `New contact from ${name}`,
             text: [
