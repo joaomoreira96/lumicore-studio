@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { sendContactNotification } from "@/lib/email/contact-notification";
 import { getContactEmail } from "@/lib/site-settings";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -55,34 +56,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const resendKey = process.env.RESEND_API_KEY;
-    if (resendKey) {
+    if (process.env.RESEND_API_KEY) {
       const siteEmail = getContactEmail(await getSiteSettings());
-      try {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Lumicore Studio <onboarding@resend.dev>",
-            to: [siteEmail],
-            reply_to: email,
-            subject: `New contact from ${name}`,
-            text: [
-              `Name: ${name}`,
-              `Email: ${email}`,
-              company ? `Company: ${company}` : null,
-              "",
-              message,
-            ]
-              .filter(Boolean)
-              .join("\n"),
-          }),
-        });
-      } catch (emailError) {
-        console.error("Email notification failed:", emailError);
+      const emailResult = await sendContactNotification(siteEmail, {
+        name,
+        email,
+        company,
+        message,
+      });
+
+      if (!emailResult.ok) {
+        console.error("Contact email notification failed:", emailResult.error);
       }
     }
 
