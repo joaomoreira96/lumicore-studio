@@ -29,7 +29,7 @@ export const dictionary: Dictionary = {
     servicesSubtitle: "Product-focused development for ambitious teams.",
     viewAllServices: "Explore Services",
     ctaTitle: "Ready to build something people use?",
-    ctaSubtitle: "Free consultation and project estimate.",
+    ctaSubtitle: "Free evaluation and project estimate.",
     ctaButton: "Get In Touch",
   },
   projects: {
@@ -84,7 +84,7 @@ export const dictionary: Dictionary = {
   contact: {
     title: "Contact",
     subtitle: "Let's discuss your next project.",
-    cta: "Free consultation and project estimate.",
+    cta: "Free evaluation and project estimate.",
     workflow: "Contact → Meeting → Custom Proposal",
     name: "Name",
     email: "Email",

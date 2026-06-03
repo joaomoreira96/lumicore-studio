@@ -164,7 +164,7 @@ INSERT INTO faqs (question, question_pt, answer, answer_pt, sort_order) VALUES
     'How much does a project cost?',
     'Quanto custa um projeto?',
     'Every project is unique. After an initial consultation, a custom proposal will be prepared.',
-    'Cada projeto é único. Após uma consulta inicial, será preparada uma proposta personalizada.',
+    'Cada projeto é único. Após uma avaliação inicial, será preparada uma proposta personalizada.',
     1
   ),
   (
