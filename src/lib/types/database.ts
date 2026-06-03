@@ -5,26 +5,29 @@ export type AppUserRole = "admin";
 export interface Project {
   id: string;
   title: string;
-  title_pt: string | null;
   slug: string;
-  description: string;
-  description_pt: string | null;
+  short_description: string;
+  long_description: string | null;
   status: ProjectStatus;
   image_url: string | null;
   project_url: string | null;
+  url_site: string | null;
   technologies: string[];
+  featured: boolean;
   sort_order: number;
+  isVisible: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface Faq {
   id: string;
-  question: string;
-  question_pt: string | null;
-  answer: string;
-  answer_pt: string | null;
+  question_pt: string;
+  answer_pt: string;
+  question_en: string;
+  answer_en: string;
   sort_order: number;
+  isVisible: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -63,5 +66,6 @@ export interface DailyCityStats {
 export interface ContactSubmission {
   name: string;
   email: string;
+  company?: string;
   message: string;
 }

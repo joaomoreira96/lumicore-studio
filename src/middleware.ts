@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminUserId } from "@/lib/auth/is-admin-server";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -52,19 +53,18 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && isLoginPage) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
+    const allowed = await isAdminUserId(user.id);
+    if (allowed) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
   }
 
   if (user && !isLoginPage) {
-    const { data: appUser } = await supabase
-      .from("app_users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (!appUser || appUser.role !== "admin") {
+    const allowed = await isAdminUserId(user.id);
+    if (!allowed) {
       await supabase.auth.signOut();
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
@@ -76,5 +76,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin", "/admin/:path*"],
 };

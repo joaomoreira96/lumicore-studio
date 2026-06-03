@@ -6,16 +6,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FadeIn } from "@/components/shared/fade-in";
-import { SITE_EMAIL } from "@/lib/mock/data";
+import { SITE_EMAIL } from "@/lib/constants";
 import { useLanguage } from "@/providers/language-provider";
 
 export function ContactForm() {
   const { dict } = useLanguage();
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">(
+    "idle"
+  );
+  const [errorMessage, setErrorMessage] = useState("");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setStatus("loading");
+    setErrorMessage("");
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const message = String(formData.get("message") ?? "").trim();
+    if (message.length < 5) {
+      setStatus("error");
+      setErrorMessage(dict.contact.messageTooShort);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(formData.get("name") ?? "").trim(),
+          email: String(formData.get("email") ?? "").trim(),
+          company: String(formData.get("company") ?? "").trim() || null,
+          message,
+        }),
+      });
+
+      const data = (await res.json()) as { error?: string; ok?: boolean };
+
+      if (!res.ok) {
+        setStatus("error");
+        setErrorMessage(data.error ?? dict.contact.error);
+        return;
+      }
+
+      setStatus("success");
+      form.reset();
+    } catch {
+      setStatus("error");
+      setErrorMessage(dict.contact.error);
+    }
   }
 
   return (
@@ -66,17 +107,25 @@ export function ContactForm() {
               id="message"
               name="message"
               required
+              minLength={5}
               rows={5}
               className="border-white/10 bg-lumi-bg/50"
             />
           </div>
 
-          <Button type="submit" className="w-full bg-lumi-blue hover:bg-lumi-blue/90">
-            {dict.contact.send}
+          <Button
+            type="submit"
+            disabled={status === "loading"}
+            className="w-full bg-lumi-blue hover:bg-lumi-blue/90"
+          >
+            {status === "loading" ? dict.contact.sending : dict.contact.send}
           </Button>
 
-          {submitted && (
+          {status === "success" && (
             <p className="text-sm text-emerald-400">{dict.contact.success}</p>
+          )}
+          {status === "error" && (
+            <p className="text-sm text-red-400">{errorMessage || dict.contact.error}</p>
           )}
         </form>
       </div>

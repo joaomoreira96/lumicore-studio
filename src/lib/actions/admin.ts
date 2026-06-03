@@ -2,10 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isAdminUserId } from "@/lib/auth/is-admin-server";
+import { uploadProjectImage } from "@/lib/storage/project-images";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ProjectStatus } from "@/lib/types/database";
 
-async function requireAdmin() {
+export type FaqFormState = {
+  success?: boolean;
+  message?: string;
+  error?: string;
+} | null;
+
+export type ProjectFormState = FaqFormState;
+
+async function requireAdminSession() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,15 +24,10 @@ async function requireAdmin() {
 
   if (!user) throw new Error("Unauthorized");
 
-  const { data: appUser } = await supabase
-    .from("app_users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const allowed = await isAdminUserId(user.id);
+  if (!allowed) throw new Error("Unauthorized");
 
-  if (!appUser || appUser.role !== "admin") throw new Error("Unauthorized");
-
-  return supabase;
+  return user;
 }
 
 function slugify(text: string) {
@@ -31,93 +37,184 @@ function slugify(text: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-export async function saveProject(formData: FormData) {
-  const supabase = await requireAdmin();
+async function requireAdminDb() {
+  await requireAdminSession();
+  return createAdminClient();
+}
 
-  const id = formData.get("id") as string | null;
-  const title = formData.get("title") as string;
-  const titlePt = (formData.get("title_pt") as string) || null;
-  const description = formData.get("description") as string;
-  const descriptionPt = (formData.get("description_pt") as string) || null;
-  const status = formData.get("status") as ProjectStatus;
-  const imageUrl = (formData.get("image_url") as string) || null;
-  const projectUrl = (formData.get("project_url") as string) || null;
-  const technologies = ((formData.get("technologies") as string) || "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
-  const sortOrder = Number(formData.get("sort_order") || 0);
-  const slug = slugify((formData.get("slug") as string) || title);
+function parseCheckbox(value: FormDataEntryValue | null) {
+  return value === "true" || value === "on";
+}
 
-  const payload = {
-    title,
-    title_pt: titlePt,
-    slug,
-    description,
-    description_pt: descriptionPt,
-    status,
-    image_url: imageUrl,
-    project_url: projectUrl,
-    technologies,
-    sort_order: sortOrder,
-  };
-
-  if (id) {
-    const { error } = await supabase.from("projects").update(payload).eq("id", id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase.from("projects").insert(payload);
-    if (error) throw new Error(error.message);
-  }
-
+function revalidatePublicProjectPaths() {
   revalidatePath("/");
-  revalidatePath("/admin/projects");
+  revalidatePath("/projects");
+  revalidatePath("/faq");
+}
+
+export async function saveProject(
+  _prevState: ProjectFormState,
+  formData: FormData
+): Promise<ProjectFormState> {
+  try {
+    const supabase = await requireAdminDb();
+
+    const id = (formData.get("id") as string | null) || null;
+    const projectId = id ?? crypto.randomUUID();
+    const title = formData.get("title") as string;
+    const shortDescription = formData.get("short_description") as string;
+    const longDescription = (formData.get("long_description") as string) || null;
+    const status = formData.get("status") as ProjectStatus;
+    const urlSite = (formData.get("url_site") as string) || null;
+    const existingImageUrl = (formData.get("existing_image_url") as string) || null;
+    const imageFile = formData.get("image") as File | null;
+    const technologies = ((formData.get("technologies") as string) || "")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const sortOrder = Number(formData.get("sort_order") || 0);
+    const featured = parseCheckbox(formData.get("featured"));
+    const isVisible = parseCheckbox(formData.get("isVisible"));
+    const slug = slugify((formData.get("slug") as string) || title);
+
+    let imageUrl = existingImageUrl || null;
+    if (imageFile && imageFile.size > 0) {
+      imageUrl = await uploadProjectImage(imageFile, projectId);
+    }
+
+    const payload = {
+      title,
+      slug,
+      short_description: shortDescription,
+      long_description: longDescription,
+      status,
+      image_url: imageUrl,
+      url_site: urlSite,
+      technologies,
+      sort_order: sortOrder,
+      featured,
+      isVisible,
+    };
+
+    if (id) {
+      const { error } = await supabase.from("projects").update(payload).eq("id", id);
+      if (error) return { error: error.message };
+    } else {
+      const { error } = await supabase.from("projects").insert({ ...payload, id: projectId });
+      if (error) return { error: error.message };
+    }
+
+    revalidatePublicProjectPaths();
+    revalidatePath("/admin/projects");
+    revalidatePath(`/projects/${slug}`);
+    if (id) revalidatePath(`/admin/projects/${id}/edit`);
+
+    return {
+      success: true,
+      message: id ? "Projeto atualizado com sucesso." : "Projeto criado com sucesso.",
+    };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao guardar o projeto.",
+    };
+  }
 }
 
 export async function deleteProject(id: string) {
-  const supabase = await requireAdmin();
+  const supabase = await requireAdminDb();
   const { error } = await supabase.from("projects").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidatePublicProjectPaths();
   revalidatePath("/admin/projects");
 }
 
-export async function saveFaq(formData: FormData) {
-  const supabase = await requireAdmin();
+export async function toggleProjectVisibility(id: string, isVisible: boolean) {
+  const supabase = await requireAdminDb();
+  const { error } = await supabase
+    .from("projects")
+    .update({ isVisible })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePublicProjectPaths();
+  revalidatePath("/admin/projects");
+}
 
-  const id = formData.get("id") as string | null;
-  const question = formData.get("question") as string;
-  const questionPt = (formData.get("question_pt") as string) || null;
-  const answer = formData.get("answer") as string;
-  const answerPt = (formData.get("answer_pt") as string) || null;
-  const sortOrder = Number(formData.get("sort_order") || 0);
+export async function saveFaq(
+  _prevState: FaqFormState,
+  formData: FormData
+): Promise<FaqFormState> {
+  try {
+    const supabase = await requireAdminDb();
 
-  const payload = {
-    question,
-    question_pt: questionPt,
-    answer,
-    answer_pt: answerPt,
-    sort_order: sortOrder,
-  };
+    const id = formData.get("id") as string | null;
+    const questionPt = formData.get("question_pt") as string;
+    const answerPt = formData.get("answer_pt") as string;
+    const questionEn = formData.get("question_en") as string;
+    const answerEn = formData.get("answer_en") as string;
+    const sortOrder = Number(formData.get("sort_order") || 0);
+    const isVisible = parseCheckbox(formData.get("isVisible"));
 
-  if (id) {
-    const { error } = await supabase.from("faqs").update(payload).eq("id", id);
-    if (error) throw new Error(error.message);
-  } else {
-    const { error } = await supabase.from("faqs").insert(payload);
-    if (error) throw new Error(error.message);
+    const payload = {
+      question_pt: questionPt,
+      answer_pt: answerPt,
+      question_en: questionEn,
+      answer_en: answerEn,
+      sort_order: sortOrder,
+      isVisible,
+    };
+
+    if (id) {
+      const { error } = await supabase.from("faqs").update(payload).eq("id", id);
+      if (error) return { error: error.message };
+    } else {
+      const { error } = await supabase.from("faqs").insert(payload);
+      if (error) return { error: error.message };
+    }
+
+    revalidatePublicProjectPaths();
+    revalidatePath("/admin/faqs");
+    if (id) revalidatePath(`/admin/faqs/${id}/edit`);
+
+    return {
+      success: true,
+      message: id ? "FAQ atualizada com sucesso." : "FAQ criada com sucesso.",
+    };
+  } catch (e) {
+    return {
+      error: e instanceof Error ? e.message : "Erro ao guardar a FAQ.",
+    };
   }
-
-  revalidatePath("/");
-  revalidatePath("/admin/faqs");
 }
 
 export async function deleteFaq(id: string) {
-  const supabase = await requireAdmin();
+  const supabase = await requireAdminDb();
   const { error } = await supabase.from("faqs").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidatePublicProjectPaths();
   revalidatePath("/admin/faqs");
+}
+
+export async function toggleFaqVisibility(id: string, isVisible: boolean) {
+  const supabase = await requireAdminDb();
+  const { error } = await supabase
+    .from("faqs")
+    .update({ isVisible })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePublicProjectPaths();
+  revalidatePath("/admin/faqs");
+}
+
+export async function markContactAnswered(id: string, isAnswered: boolean) {
+  await requireAdminSession();
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("contact_requests")
+    .update({ isAnswered })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin");
+  revalidatePath("/admin/contacts");
 }
 
 export async function signOut() {

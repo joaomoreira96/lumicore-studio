@@ -1,5 +1,9 @@
+import { notFound } from "next/navigation";
 import { ProjectDetailView } from "@/components/projects/project-detail-view";
-import { mockProjects } from "@/lib/mock/data";
+import {
+  getAllProjectSlugs,
+  getPublicProjectBySlug,
+} from "@/lib/data/public";
 
 export default async function ProjectDetailPage({
   params,
@@ -7,9 +11,16 @@ export default async function ProjectDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return <ProjectDetailView slug={slug} />;
+  const project = await getPublicProjectBySlug(slug);
+
+  if (!project) {
+    notFound();
+  }
+
+  return <ProjectDetailView project={project} />;
 }
 
-export function generateStaticParams() {
-  return mockProjects.map((project) => ({ slug: project.slug }));
+export async function generateStaticParams() {
+  const slugs = await getAllProjectSlugs();
+  return slugs.map((slug) => ({ slug }));
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
+import { logoUrl, LOGO_MONOGRAM_SRC } from "@/lib/constants";
 import "./globals.css";
 
 const inter = Inter({
@@ -17,8 +18,8 @@ export const metadata: Metadata = {
   description:
     "Premium digital product studio building software, websites and interactive experiences.",
   icons: {
-    icon: "/LumicoreStudioSuperMinimalistLogo.png",
-    apple: "/LumicoreStudioSuperMinimalistLogo.png",
+    icon: logoUrl(LOGO_MONOGRAM_SRC),
+    apple: logoUrl(LOGO_MONOGRAM_SRC),
   },
 };
 

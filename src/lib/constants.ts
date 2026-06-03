@@ -1,27 +1,4 @@
-import type { Locale } from "@/lib/i18n/config";
-import type { Faq, Project, ProjectStatus } from "@/lib/types/database";
-
-export function localizedProject(project: Project, locale: Locale) {
-  return {
-    ...project,
-    title:
-      locale === "pt" && project.title_pt ? project.title_pt : project.title,
-    description:
-      locale === "pt" && project.description_pt
-        ? project.description_pt
-        : project.description,
-  };
-}
-
-export function localizedFaq(faq: Faq, locale: Locale) {
-  return {
-    ...faq,
-    question:
-      locale === "pt" && faq.question_pt ? faq.question_pt : faq.question,
-    answer:
-      locale === "pt" && faq.answer_pt ? faq.answer_pt : faq.answer,
-  };
-}
+import type { ProjectStatus } from "@/lib/types/database";
 
 export const statusBadgeClass: Record<ProjectStatus, string> = {
   completed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
@@ -41,3 +18,14 @@ export const TECH_STACK = [
 export const SITE_EMAIL = "hello@lumicore.studio";
 export const SITE_GITHUB = "https://github.com/lumicore-studio";
 export const SITE_LINKEDIN = "https://linkedin.com/company/lumicore-studio";
+
+/** Bump when replacing logo files in /public (forces browser cache bust) */
+export const ASSET_VERSION = "4";
+
+export const LOGO_FULL_SRC = "/LumicoreStudioLogo.png";
+export const LOGO_MONOGRAM_SRC = "/LumicoreStudioSuperMinimalistLogo.png";
+
+/** Use with plain <img> — next/image caches local PNGs aggressively */
+export function logoUrl(path: string): string {
+  return `${path}?v=${ASSET_VERSION}`;
+}

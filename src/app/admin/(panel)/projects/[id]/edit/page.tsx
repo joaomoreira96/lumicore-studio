@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { ProjectForm } from "@/components/admin/project-form";
-import { createClient } from "@/lib/supabase/server";
-import type { Project } from "@/lib/types/database";
+import { getAdminProjectById } from "@/lib/data/admin";
 import Link from "next/link";
 
 export default async function EditProjectPage({
@@ -10,12 +9,9 @@ export default async function EditProjectPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from("projects").select("*").eq("id", id).single();
+  const project = await getAdminProjectById(id);
 
-  if (!data) notFound();
-
-  const project = data as Project;
+  if (!project) notFound();
 
   return (
     <div>

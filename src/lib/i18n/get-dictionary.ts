@@ -11,6 +11,7 @@ export type Dictionary = {
     faq: string;
     contact: string;
     getInTouch: string;
+    adminArea: string;
   };
   hero: {
     badge: string;
@@ -65,6 +66,7 @@ export type Dictionary = {
   faq: {
     title: string;
     subtitle: string;
+    empty: string;
   };
   contact: {
     title: string;
@@ -76,7 +78,10 @@ export type Dictionary = {
     company: string;
     message: string;
     send: string;
+    sending: string;
     success: string;
+    error: string;
+    messageTooShort: string;
   };
   footer: {
     tagline: string;

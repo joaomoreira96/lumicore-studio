@@ -117,9 +117,7 @@ CREATE POLICY "Admins manage faqs" ON faqs
   );
 
 CREATE POLICY "Admins read app_users" ON app_users
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM app_users au WHERE au.id = auth.uid() AND au.role = 'admin')
-  );
+  FOR SELECT USING (id = auth.uid());
 
 CREATE POLICY "Admins read daily_stats" ON daily_stats
   FOR SELECT USING (

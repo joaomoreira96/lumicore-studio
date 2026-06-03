@@ -3,20 +3,15 @@
 import { useMemo, useState } from "react";
 import { ProjectCard } from "@/components/projects/project-card";
 import { FadeIn } from "@/components/shared/fade-in";
-import {
-  getAllProjects,
-  type MockProject,
-  type ProjectStatus,
-} from "@/lib/mock/data";
+import type { Project, ProjectStatus } from "@/lib/types/database";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
 
 type FilterValue = "all" | ProjectStatus;
 
-export function ProjectGrid({ projects }: { projects?: MockProject[] }) {
+export function ProjectGrid({ projects }: { projects: Project[] }) {
   const { dict } = useLanguage();
   const [filter, setFilter] = useState<FilterValue>("all");
-  const allProjects = projects ?? getAllProjects();
 
   const filters: { value: FilterValue; label: string }[] = [
     { value: "all", label: dict.projects.filters.all },
@@ -26,9 +21,9 @@ export function ProjectGrid({ projects }: { projects?: MockProject[] }) {
   ];
 
   const filtered = useMemo(() => {
-    if (filter === "all") return allProjects;
-    return allProjects.filter((p) => p.status === filter);
-  }, [allProjects, filter]);
+    if (filter === "all") return projects;
+    return projects.filter((p) => p.status === filter);
+  }, [projects, filter]);
 
   return (
     <div>

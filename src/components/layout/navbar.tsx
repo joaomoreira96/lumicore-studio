@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { logoUrl, LOGO_FULL_SRC, LOGO_MONOGRAM_SRC } from "@/lib/constants";
 import { localeLabels, locales, type Locale } from "@/lib/i18n/config";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ const navLinks = [
   { key: "contact" as const, href: "/contact" },
 ];
 
-export function Navbar() {
+export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
   const { dict, locale, setLocale } = useLanguage();
   const [open, setOpen] = useState(false);
 
@@ -32,27 +32,23 @@ export function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-white/5 bg-lumi-bg/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-            <Image
-              src="/LumicoreStudioLogo.png"
+        <div className="mx-auto flex min-h-[6rem] max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:min-h-[5.4rem] md:py-3">
+          <Link href="/" className="flex shrink-0 items-center" onClick={() => setOpen(false)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoUrl(LOGO_FULL_SRC)}
               alt="Lumicore Studio"
-              width={140}
-              height={36}
-              className="hidden h-8 w-auto sm:block"
-              priority
+              className="hidden h-[4.95rem] w-auto md:block lg:h-[5.4rem]"
             />
-            <Image
-              src="/LumicoreStudioSuperMinimalistLogo.png"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoUrl(LOGO_MONOGRAM_SRC)}
               alt="Lumicore Studio"
-              width={32}
-              height={32}
-              className="h-8 w-8 sm:hidden"
-              priority
+              className="size-24 shrink-0 md:hidden"
             />
           </Link>
 
-          <nav className="hidden items-center gap-8 md:flex">
+          <nav className="hidden items-center gap-6 lg:gap-8 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.key}
@@ -66,12 +62,17 @@ export function Navbar() {
 
           <div className="hidden items-center gap-3 md:flex">
             <LanguageSwitcher locale={locale} setLocale={setLocale} />
+            {isAdmin && (
+              <Button asChild variant="outline" size="sm" className="border-white/10">
+                <Link href="/admin">{dict.nav.adminArea}</Link>
+              </Button>
+            )}
             <Button asChild size="sm" className="bg-lumi-blue hover:bg-lumi-blue/90">
               <Link href="/contact">{dict.nav.getInTouch}</Link>
             </Button>
           </div>
 
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <LanguageSwitcher locale={locale} setLocale={setLocale} />
             <button
               type="button"
@@ -125,9 +126,25 @@ export function Navbar() {
                     {dict.nav[link.key]}
                   </Link>
                 ))}
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    className="rounded-lg px-3 py-3 text-base text-lumi-blue transition-colors hover:bg-white/5"
+                  >
+                    {dict.nav.adminArea}
+                  </Link>
+                )}
               </nav>
 
-              <div className="mt-auto pt-8">
+              <div className="mt-auto space-y-3 pt-8">
+                {isAdmin && (
+                  <Button asChild variant="outline" className="w-full border-white/10">
+                    <Link href="/admin" onClick={() => setOpen(false)}>
+                      {dict.nav.adminArea}
+                    </Link>
+                  </Button>
+                )}
                 <Button asChild className="w-full bg-lumi-blue hover:bg-lumi-blue/90">
                   <Link href="/contact" onClick={() => setOpen(false)}>
                     {dict.nav.getInTouch}

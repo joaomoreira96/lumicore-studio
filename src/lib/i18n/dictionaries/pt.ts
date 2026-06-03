@@ -12,6 +12,7 @@ export const dictionary: Dictionary = {
     faq: "FAQ",
     contact: "Contacto",
     getInTouch: "Fale Connosco",
+    adminArea: "Área Admin",
   },
   hero: {
     badge: "A aceitar novos clientes",
@@ -78,6 +79,7 @@ export const dictionary: Dictionary = {
   faq: {
     title: "FAQ",
     subtitle: "Perguntas frequentes sobre trabalhar com a Lumicore Studio.",
+    empty: "Ainda não há FAQs disponíveis.",
   },
   contact: {
     title: "Contacto",
@@ -89,7 +91,10 @@ export const dictionary: Dictionary = {
     company: "Empresa",
     message: "Mensagem",
     send: "Enviar Mensagem",
+    sending: "A enviar…",
     success: "Obrigado! Entraremos em contacto em breve.",
+    error: "Algo correu mal. Tente novamente ou envie-nos um email.",
+    messageTooShort: "A mensagem deve ter pelo menos 5 caracteres.",
   },
   footer: {
     tagline: "Software • Web • Experiências Interativas",

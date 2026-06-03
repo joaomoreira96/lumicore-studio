@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FaqForm } from "@/components/admin/faq-form";
-import { createClient } from "@/lib/supabase/server";
-import type { Faq } from "@/lib/types/database";
+import { getAdminFaqById } from "@/lib/data/admin";
 
 export default async function EditFaqPage({
   params,
@@ -10,12 +9,9 @@ export default async function EditFaqPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data } = await supabase.from("faqs").select("*").eq("id", id).single();
+  const faq = await getAdminFaqById(id);
 
-  if (!data) notFound();
-
-  const faq = data as Faq;
+  if (!faq) notFound();
 
   return (
     <div>

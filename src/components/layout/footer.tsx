@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ExternalLink, Mail } from "lucide-react";
-import { SITE_EMAIL, SITE_GITHUB, SITE_LINKEDIN } from "@/lib/mock/data";
+import { SITE_EMAIL, SITE_GITHUB, SITE_LINKEDIN } from "@/lib/constants";
 import { useLanguage } from "@/providers/language-provider";
 
 export function Footer() {
