@@ -61,9 +61,12 @@ export async function saveProject(
 
     const id = (formData.get("id") as string | null) || null;
     const projectId = id ?? crypto.randomUUID();
-    const title = formData.get("title") as string;
-    const shortDescription = formData.get("short_description") as string;
-    const longDescription = (formData.get("long_description") as string) || null;
+    const titlePt = formData.get("title_pt") as string;
+    const titleEn = formData.get("title_en") as string;
+    const shortDescriptionPt = formData.get("short_description_pt") as string;
+    const shortDescriptionEn = formData.get("short_description_en") as string;
+    const longDescriptionPt = (formData.get("long_description_pt") as string) || null;
+    const longDescriptionEn = (formData.get("long_description_en") as string) || null;
     const status = formData.get("status") as ProjectStatus;
     const urlSite = (formData.get("url_site") as string) || null;
     const existingImageUrl = (formData.get("existing_image_url") as string) || null;
@@ -75,7 +78,9 @@ export async function saveProject(
     const sortOrder = Number(formData.get("sort_order") || 0);
     const featured = parseCheckbox(formData.get("featured"));
     const isVisible = parseCheckbox(formData.get("isVisible"));
-    const slug = slugify((formData.get("slug") as string) || title);
+    const slug = slugify(
+      (formData.get("slug") as string) || titleEn || titlePt
+    );
 
     let imageUrl = existingImageUrl || null;
     if (imageFile && imageFile.size > 0) {
@@ -83,10 +88,13 @@ export async function saveProject(
     }
 
     const payload = {
-      title,
       slug,
-      short_description: shortDescription,
-      long_description: longDescription,
+      title_pt: titlePt,
+      title_en: titleEn,
+      short_description_pt: shortDescriptionPt,
+      short_description_en: shortDescriptionEn,
+      long_description_pt: longDescriptionPt,
+      long_description_en: longDescriptionEn,
       status,
       image_url: imageUrl,
       url_site: urlSite,

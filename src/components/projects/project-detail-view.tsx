@@ -7,15 +7,21 @@ import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/shared/fade-in";
 import { PageContainer, Section } from "@/components/shared/page-shell";
 import { statusBadgeClass } from "@/lib/constants";
+import {
+  getProjectLongDescription,
+  getProjectTitle,
+} from "@/lib/project-locale";
 import { getProjectSiteUrl } from "@/lib/projects";
 import type { Project } from "@/lib/types/database";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
 
 export function ProjectDetailView({ project }: { project: Project }) {
-  const { dict } = useLanguage();
+  const { dict, locale } = useLanguage();
 
   const siteUrl = getProjectSiteUrl(project);
+  const title = getProjectTitle(project, locale);
+  const description = getProjectLongDescription(project, locale);
 
   return (
     <Section>
@@ -33,7 +39,7 @@ export function ProjectDetailView({ project }: { project: Project }) {
         <FadeIn delay={0.05}>
           <div className="mt-8 flex flex-wrap items-start justify-between gap-4">
             <h1 className="font-heading text-3xl font-bold md:text-4xl lg:text-5xl">
-              {project.title}
+              {title}
             </h1>
             <Badge
               variant="outline"
@@ -50,13 +56,13 @@ export function ProjectDetailView({ project }: { project: Project }) {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={project.image_url}
-                alt={project.title}
+                alt={title}
                 className="h-full w-full object-cover"
               />
             ) : (
               <div className="flex h-full items-center justify-center">
                 <span className="font-heading text-6xl font-bold gradient-text">
-                  {project.title.charAt(0)}
+                  {title.charAt(0)}
                 </span>
               </div>
             )}
@@ -65,7 +71,7 @@ export function ProjectDetailView({ project }: { project: Project }) {
 
         <FadeIn delay={0.15}>
           <p className="mt-10 max-w-3xl text-base leading-relaxed text-lumi-muted md:text-lg">
-            {project.long_description ?? project.short_description}
+            {description}
           </p>
         </FadeIn>
 

@@ -4,6 +4,10 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { statusBadgeClass } from "@/lib/constants";
+import {
+  getProjectShortDescription,
+  getProjectTitle,
+} from "@/lib/project-locale";
 import type { Project } from "@/lib/types/database";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
@@ -19,10 +23,12 @@ export function ProjectCard({
   compact?: boolean;
   variant?: ProjectCardVariant;
 }) {
-  const { dict } = useLanguage();
+  const { dict, locale } = useLanguage();
   const resolvedVariant: ProjectCardVariant = variant ?? (compact ? "compact" : "default");
   const isFeatured = resolvedVariant === "featured";
   const isCompact = resolvedVariant === "compact";
+  const title = getProjectTitle(project, locale);
+  const shortDescription = getProjectShortDescription(project, locale);
 
   return (
     <article
@@ -41,7 +47,7 @@ export function ProjectCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={project.image_url}
-            alt={project.title}
+            alt={title}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
@@ -52,7 +58,7 @@ export function ProjectCard({
                 isFeatured ? "text-2xl" : "text-4xl"
               )}
             >
-              {project.title.charAt(0)}
+              {title.charAt(0)}
             </span>
           </div>
         )}
@@ -70,7 +76,7 @@ export function ProjectCard({
                   : "text-lg md:text-xl"
             )}
           >
-            {project.title}
+            {title}
           </h3>
           {!isFeatured && (
             <Badge
@@ -88,7 +94,7 @@ export function ProjectCard({
             isFeatured ? "line-clamp-2 text-xs" : "line-clamp-2 text-sm"
           )}
         >
-          {project.short_description}
+          {shortDescription}
         </p>
 
         {resolvedVariant === "default" && (project.technologies?.length ?? 0) > 0 && (

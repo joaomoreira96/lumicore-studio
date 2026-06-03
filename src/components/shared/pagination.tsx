@@ -12,6 +12,8 @@ type PaginationProps = {
     previous: string;
     next: string;
   };
+  /** Preserved in pagination links (e.g. status filter) */
+  queryParams?: Record<string, string | undefined>;
   /** Keeps viewport on this section instead of jumping to page top */
   scrollAnchor?: string;
 };
@@ -21,6 +23,7 @@ export function Pagination({
   totalPages,
   basePath,
   labels,
+  queryParams,
   scrollAnchor,
 }: PaginationProps) {
   useEffect(() => {
@@ -45,7 +48,7 @@ export function Pagination({
     >
       {page > 1 ? (
         <PaginationLink
-          href={buildHref(basePath, page - 1, scrollAnchor)}
+          href={buildHref(basePath, page - 1, scrollAnchor, queryParams)}
           label={previous}
           scroll={linkScroll}
         />
@@ -56,7 +59,7 @@ export function Pagination({
       {pages.map((p) => (
         <Link
           key={p}
-          href={buildHref(basePath, p, scrollAnchor)}
+          href={buildHref(basePath, p, scrollAnchor, queryParams)}
           scroll={linkScroll}
           className={cn(
             "min-w-9 rounded-lg px-3 py-1.5 text-center text-sm transition-colors",
@@ -72,7 +75,7 @@ export function Pagination({
 
       {page < totalPages ? (
         <PaginationLink
-          href={buildHref(basePath, page + 1, scrollAnchor)}
+          href={buildHref(basePath, page + 1, scrollAnchor, queryParams)}
           label={next}
           scroll={linkScroll}
         />
@@ -83,13 +86,23 @@ export function Pagination({
   );
 }
 
-function buildHref(basePath: string, page: number, scrollAnchor?: string) {
-  const hash = scrollAnchor ? `#${scrollAnchor}` : "";
-  if (page <= 1) {
-    return `${basePath}${hash}` || "/";
+function buildHref(
+  basePath: string,
+  page: number,
+  scrollAnchor?: string,
+  queryParams?: Record<string, string | undefined>
+) {
+  const params = new URLSearchParams();
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value) params.set(key, value);
+    }
   }
-  const separator = basePath.includes("?") ? "&" : "?";
-  return `${basePath}${separator}page=${page}${hash}`;
+  if (page > 1) params.set("page", String(page));
+
+  const query = params.toString();
+  const hash = scrollAnchor ? `#${scrollAnchor}` : "";
+  return query ? `${basePath}?${query}${hash}` : `${basePath}${hash}` || "/";
 }
 
 function PaginationLink({
@@ -110,4 +123,18 @@ function PaginationLink({
       {label}
     </Link>
   );
+}
+
+export function buildPathWithQuery(
+  basePath: string,
+  queryParams?: Record<string, string | undefined>
+) {
+  const params = new URLSearchParams();
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value) params.set(key, value);
+    }
+  }
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
 }

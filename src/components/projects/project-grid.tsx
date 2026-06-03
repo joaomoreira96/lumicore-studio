@@ -1,17 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
 import { ProjectCard } from "@/components/projects/project-card";
 import { FadeIn } from "@/components/shared/fade-in";
-import type { Project, ProjectStatus } from "@/lib/types/database";
+import { buildPathWithQuery } from "@/components/shared/pagination";
+import type { Project } from "@/lib/types/database";
+import type { ProjectFilter } from "@/lib/projects-filter";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
 
-type FilterValue = "all" | ProjectStatus;
+type FilterValue = ProjectFilter;
 
-export function ProjectGrid({ projects }: { projects: Project[] }) {
+export function ProjectGrid({
+  projects,
+  filter,
+}: {
+  projects: Project[];
+  filter: FilterValue;
+}) {
   const { dict } = useLanguage();
-  const [filter, setFilter] = useState<FilterValue>("all");
 
   const filters: { value: FilterValue; label: string }[] = [
     { value: "all", label: dict.projects.filters.all },
@@ -20,19 +27,16 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
     { value: "archived", label: dict.projects.filters.archived },
   ];
 
-  const filtered = useMemo(() => {
-    if (filter === "all") return projects;
-    return projects.filter((p) => p.status === filter);
-  }, [projects, filter]);
-
   return (
     <div>
       <div className="flex flex-wrap gap-2">
         {filters.map((f) => (
-          <button
+          <Link
             key={f.value}
-            type="button"
-            onClick={() => setFilter(f.value)}
+            href={buildPathWithQuery(
+              "/projects",
+              f.value === "all" ? undefined : { status: f.value }
+            )}
             className={cn(
               "rounded-lg border px-3 py-1.5 text-sm transition-colors",
               filter === f.value
@@ -41,15 +45,15 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
             )}
           >
             {f.label}
-          </button>
+          </Link>
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {projects.length === 0 ? (
         <p className="mt-12 text-center text-lumi-muted">{dict.projects.noProjects}</p>
       ) : (
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          {filtered.map((project, i) => (
+          {projects.map((project, i) => (
             <FadeIn key={project.id} delay={i * 0.05}>
               <ProjectCard project={project} />
             </FadeIn>

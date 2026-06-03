@@ -10,17 +10,24 @@ import {
   type PaginatedResult,
 } from "@/lib/pagination";
 import type { Faq, Project } from "@/lib/types/database";
+import type { ProjectFilter } from "@/lib/projects-filter";
 
 export async function getPublicProjectsPage(
   page: number,
-  pageSize = PUBLIC_PROJECT_PAGE_SIZE
+  pageSize = PUBLIC_PROJECT_PAGE_SIZE,
+  filter: ProjectFilter = "all"
 ): Promise<PaginatedResult<Project>> {
   const supabase = await createClient();
 
-  const { count, error: countError } = await supabase
+  let countQuery = supabase
     .from("projects")
     .select("id", { count: "exact", head: true })
     .eq("isVisible", true);
+  if (filter !== "all") {
+    countQuery = countQuery.eq("status", filter);
+  }
+
+  const { count, error: countError } = await countQuery;
 
   if (countError) {
     console.error("Failed to count projects:", countError.message);
@@ -31,12 +38,17 @@ export async function getPublicProjectsPage(
   const safePage = clampPage(page, total, pageSize);
   const { from, to } = pageRange(safePage, pageSize);
 
-  const { data, error } = await supabase
+  let dataQuery = supabase
     .from("projects")
     .select("*")
     .eq("isVisible", true)
     .order("sort_order", { ascending: true })
     .range(from, to);
+  if (filter !== "all") {
+    dataQuery = dataQuery.eq("status", filter);
+  }
+
+  const { data, error } = await dataQuery;
 
   if (error) {
     console.error("Failed to fetch projects:", error.message);

@@ -22,7 +22,7 @@ export function ProjectForm({ project }: { project?: Project }) {
   }, [state, project, router]);
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} className="space-y-6">
       {project && <input type="hidden" name="id" value={project.id} />}
       {project?.image_url && (
         <input type="hidden" name="existing_image_url" value={project.image_url} />
@@ -30,20 +30,39 @@ export function ProjectForm({ project }: { project?: Project }) {
 
       <FormFeedback state={state} />
 
-      <Field label="Title" name="title" defaultValue={project?.title} required />
-      <Field label="Slug" name="slug" defaultValue={project?.slug} placeholder="auto-from-title" />
-      <TextField
-        label="Short description"
-        name="short_description"
-        defaultValue={project?.short_description}
-        required
-      />
-      <TextField
-        label="Long description"
-        name="long_description"
-        defaultValue={project?.long_description ?? ""}
-        rows={5}
-      />
+      <Field label="Slug" name="slug" defaultValue={project?.slug} placeholder="auto-from-title-en" />
+
+      <LanguageSection title="Português">
+        <Field label="Título (PT)" name="title_pt" defaultValue={project?.title_pt} required />
+        <TextField
+          label="Descrição curta (PT)"
+          name="short_description_pt"
+          defaultValue={project?.short_description_pt}
+          required
+        />
+        <TextField
+          label="Descrição longa (PT)"
+          name="long_description_pt"
+          defaultValue={project?.long_description_pt ?? ""}
+          rows={5}
+        />
+      </LanguageSection>
+
+      <LanguageSection title="English">
+        <Field label="Title (EN)" name="title_en" defaultValue={project?.title_en} required />
+        <TextField
+          label="Short description (EN)"
+          name="short_description_en"
+          defaultValue={project?.short_description_en}
+          required
+        />
+        <TextField
+          label="Long description (EN)"
+          name="long_description_en"
+          defaultValue={project?.long_description_en ?? ""}
+          rows={5}
+        />
+      </LanguageSection>
 
       <div>
         <label htmlFor="status" className="mb-1.5 block text-sm text-lumi-muted">
@@ -121,6 +140,21 @@ function FormFeedback({ state }: { state: ProjectFormState }) {
     >
       {state.success ? state.message : state.error}
     </div>
+  );
+}
+
+function LanguageSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset className="space-y-4 rounded-xl border border-white/10 bg-lumi-bg/30 p-4">
+      <legend className="px-1 text-sm font-semibold text-lumi-text">{title}</legend>
+      {children}
+    </fieldset>
   );
 }
 

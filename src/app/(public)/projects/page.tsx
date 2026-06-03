@@ -5,17 +5,19 @@ import { Pagination } from "@/components/shared/pagination";
 import { getPublicProjectsPage } from "@/lib/data/public";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { parsePage } from "@/lib/pagination";
+import { parseProjectFilter, projectFilterQuery } from "@/lib/projects-filter";
 
 export default async function ProjectsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; status?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, status: statusParam } = await searchParams;
   const page = parsePage(pageParam);
+  const filter = parseProjectFilter(statusParam);
 
   const [{ items: projects, totalPages }, { dict, locale }] = await Promise.all([
-    getPublicProjectsPage(page),
+    getPublicProjectsPage(page, undefined, filter),
     getServerDictionary(),
   ]);
 
@@ -31,12 +33,13 @@ export default async function ProjectsPage({
           <PageHeader title={dict.projects.title} subtitle={dict.projects.subtitle} />
         </FadeIn>
         <div className="mt-12">
-          <ProjectGrid key={page} projects={projects} />
+          <ProjectGrid projects={projects} filter={filter} />
           <Pagination
             page={page}
             totalPages={totalPages}
             basePath="/projects"
             labels={paginationLabels}
+            queryParams={projectFilterQuery(filter)}
           />
         </div>
       </PageContainer>

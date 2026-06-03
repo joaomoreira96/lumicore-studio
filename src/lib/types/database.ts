@@ -4,10 +4,13 @@ export type AppUserRole = "admin";
 
 export interface Project {
   id: string;
-  title: string;
   slug: string;
-  short_description: string;
-  long_description: string | null;
+  title_pt: string;
+  title_en: string;
+  short_description_pt: string;
+  short_description_en: string;
+  long_description_pt: string | null;
+  long_description_en: string | null;
   status: ProjectStatus;
   image_url: string | null;
   project_url: string | null;

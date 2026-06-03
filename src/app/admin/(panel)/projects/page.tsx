@@ -46,7 +46,7 @@ export default async function AdminProjectsPage({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium">{project.title}</p>
+                        <p className="font-medium">{project.title_pt}</p>
                         <VisibilityBadge isVisible={project.isVisible} />
                         {project.featured && (
                           <span className="rounded-md bg-lumi-blue/15 px-2 py-0.5 text-xs text-lumi-blue">
@@ -54,6 +54,7 @@ export default async function AdminProjectsPage({
                           </span>
                         )}
                       </div>
+                      <p className="mt-1 text-sm text-lumi-muted">{project.title_en}</p>
                       <p className="mt-1 text-xs text-lumi-muted">
                         {project.status} · order {project.sort_order}
                       </p>
