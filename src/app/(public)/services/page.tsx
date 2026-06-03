@@ -1,12 +1,10 @@
-"use client";
-
 import { ServiceCards } from "@/components/services/service-cards";
 import { FadeIn } from "@/components/shared/fade-in";
 import { PageContainer, PageHeader, Section } from "@/components/shared/page-shell";
-import { useLanguage } from "@/providers/language-provider";
+import { getServerDictionary } from "@/lib/i18n/server";
 
-export default function ServicesPage() {
-  const { dict } = useLanguage();
+export default async function ServicesPage() {
+  const { dict } = await getServerDictionary();
 
   return (
     <Section>

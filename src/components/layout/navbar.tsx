@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -38,12 +37,20 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
             <img
               src={logoUrl(LOGO_FULL_SRC)}
               alt="Lumicore Studio"
+              width={320}
+              height={104}
+              decoding="async"
+              fetchPriority="high"
               className="hidden h-[5.94rem] w-auto md:block lg:h-[6.48rem]"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logoUrl(LOGO_MONOGRAM_SRC)}
               alt="Lumicore Studio"
+              width={96}
+              height={96}
+              decoding="async"
+              fetchPriority="high"
               className="size-24 shrink-0 md:hidden"
             />
           </Link>
@@ -86,75 +93,70 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
         </div>
       </header>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden"
-              onClick={() => setOpen(false)}
-            />
-            <motion.aside
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="fixed inset-y-0 right-0 z-50 flex w-[min(100%,320px)] flex-col border-l border-white/10 bg-lumi-bg-secondary p-6 md:hidden"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-heading text-sm font-semibold">Menu</span>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close menu"
-                  className="text-lumi-muted hover:text-lumi-text"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-
-              <nav className="mt-10 flex flex-col gap-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.key}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="rounded-lg px-3 py-3 text-base text-lumi-text transition-colors hover:bg-white/5"
-                  >
-                    {dict.nav[link.key]}
-                  </Link>
-                ))}
-                {isAdmin && (
-                  <Link
-                    href="/admin"
-                    onClick={() => setOpen(false)}
-                    className="rounded-lg px-3 py-3 text-base text-lumi-blue transition-colors hover:bg-white/5"
-                  >
-                    {dict.nav.adminArea}
-                  </Link>
-                )}
-              </nav>
-
-              <div className="mt-auto space-y-3 pt-8">
-                {isAdmin && (
-                  <Button asChild variant="outline" className="w-full border-white/10">
-                    <Link href="/admin" onClick={() => setOpen(false)}>
-                      {dict.nav.adminArea}
-                    </Link>
-                  </Button>
-                )}
-                <Button asChild className="w-full bg-lumi-blue hover:bg-lumi-blue/90">
-                  <Link href="/contact" onClick={() => setOpen(false)}>
-                    {dict.nav.getInTouch}
-                  </Link>
-                </Button>
-              </div>
-            </motion.aside>
-          </>
+      <div
+        className={cn(
+          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          open ? "opacity-100" : "pointer-events-none opacity-0"
         )}
-      </AnimatePresence>
+        onClick={() => setOpen(false)}
+        aria-hidden={!open}
+      />
+      <aside
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 flex w-[min(100%,320px)] flex-col border-l border-white/10 bg-lumi-bg-secondary p-6 transition-transform duration-300 ease-out md:hidden",
+          open ? "translate-x-0" : "translate-x-full pointer-events-none"
+        )}
+        aria-hidden={!open}
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-heading text-sm font-semibold">Menu</span>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close menu"
+            className="text-lumi-muted hover:text-lumi-text"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <nav className="mt-10 flex flex-col gap-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.key}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-3 text-base text-lumi-text transition-colors hover:bg-white/5"
+            >
+              {dict.nav[link.key]}
+            </Link>
+          ))}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-3 text-base text-lumi-blue transition-colors hover:bg-white/5"
+            >
+              {dict.nav.adminArea}
+            </Link>
+          )}
+        </nav>
+
+        <div className="mt-auto space-y-3 pt-8">
+          {isAdmin && (
+            <Button asChild variant="outline" className="w-full border-white/10">
+              <Link href="/admin" onClick={() => setOpen(false)}>
+                {dict.nav.adminArea}
+              </Link>
+            </Button>
+          )}
+          <Button asChild className="w-full bg-lumi-blue hover:bg-lumi-blue/90">
+            <Link href="/contact" onClick={() => setOpen(false)}>
+              {dict.nav.getInTouch}
+            </Link>
+          </Button>
+        </div>
+      </aside>
     </>
   );
 }

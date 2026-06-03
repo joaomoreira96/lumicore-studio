@@ -26,7 +26,7 @@ export default async function HomePage({
 
   return (
     <>
-      <HeroSection />
+      <HeroSection dict={dict.hero} />
       <FeaturedProjectsSection
         projects={projects}
         page={page}

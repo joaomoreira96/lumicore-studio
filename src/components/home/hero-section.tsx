@@ -1,14 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/providers/language-provider";
+import type { Dictionary } from "@/lib/i18n/get-dictionary";
 
-export function HeroSection() {
-  const { dict } = useLanguage();
-
+export function HeroSection({ dict }: { dict: Dictionary["hero"] }) {
   return (
     <section className="relative overflow-hidden hero-grid">
       <div className="pointer-events-none absolute inset-0">
@@ -18,39 +13,30 @@ export function HeroSection() {
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28 lg:py-36">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-lumi-muted backdrop-blur-sm"
+        <div
+          className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-lumi-muted backdrop-blur-sm"
         >
           <span className="size-1.5 rounded-full bg-emerald-400" />
-          {dict.hero.badge}
-        </motion.div>
+          {dict.badge}
+        </div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-8 max-w-3xl font-heading text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl"
+        <h1
+          className="animate-fade-in-up mt-8 max-w-3xl font-heading text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl"
+          style={{ animationDelay: "0.1s" }}
         >
-          {dict.hero.headline}
-        </motion.h1>
+          {dict.headline}
+        </h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-4 max-w-xl text-lg text-lumi-muted md:text-xl"
+        <p
+          className="animate-fade-in-up mt-4 max-w-xl text-lg text-lumi-muted md:text-xl"
+          style={{ animationDelay: "0.2s" }}
         >
-          {dict.hero.subheadline}
-        </motion.p>
+          {dict.subheadline}
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-10 flex flex-col gap-4 sm:flex-row"
+        <div
+          className="animate-fade-in-up mt-10 flex flex-col gap-4 sm:flex-row"
+          style={{ animationDelay: "0.3s" }}
         >
           <Button
             asChild
@@ -58,7 +44,7 @@ export function HeroSection() {
             className="h-11 bg-lumi-blue px-6 hover:bg-lumi-blue/90"
           >
             <Link href="/projects">
-              {dict.hero.viewProjects}
+              {dict.viewProjects}
               <ArrowRight className="size-4" />
             </Link>
           </Button>
@@ -68,9 +54,9 @@ export function HeroSection() {
             size="lg"
             className="h-11 border-white/10 bg-transparent px-6 hover:bg-white/5"
           >
-            <Link href="/contact">{dict.hero.getInTouch}</Link>
+            <Link href="/contact">{dict.getInTouch}</Link>
           </Button>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

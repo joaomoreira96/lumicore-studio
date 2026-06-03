@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { isAdminUserId } from "@/lib/auth/is-admin-server";
+import { SITE_SETTINGS_TAG } from "@/lib/data/site-settings";
 import { uploadProjectImage } from "@/lib/storage/project-images";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -251,6 +252,7 @@ export async function saveSiteSettings(
 
     if (error) return { error: error.message };
 
+    updateTag(SITE_SETTINGS_TAG);
     revalidatePath("/", "layout");
     revalidatePath("/contact");
     revalidatePath("/admin/settings");

@@ -1,23 +1,23 @@
-"use client";
-
-import { motion, type HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-type FadeInProps = HTMLMotionProps<"div"> & {
+type FadeInProps = React.HTMLAttributes<HTMLDivElement> & {
   delay?: number;
 };
 
-export function FadeIn({ className, delay = 0, children, ...props }: FadeInProps) {
+export function FadeIn({
+  className,
+  delay = 0,
+  style,
+  children,
+  ...props
+}: FadeInProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-48px" }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      className={cn(className)}
+    <div
+      className={cn("animate-fade-in-up", className)}
+      style={{ ...style, animationDelay: `${delay}s` }}
       {...props}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }

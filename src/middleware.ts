@@ -52,18 +52,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isLoginPage) {
+  if (user) {
     const allowed = await isAdminUserId(user.id);
-    if (allowed) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin";
-      return NextResponse.redirect(url);
-    }
-    return supabaseResponse;
-  }
 
-  if (user && !isLoginPage) {
-    const allowed = await isAdminUserId(user.id);
+    if (isLoginPage) {
+      if (allowed) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin";
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
+    }
+
     if (!allowed) {
       await supabase.auth.signOut();
       const url = request.nextUrl.clone();
